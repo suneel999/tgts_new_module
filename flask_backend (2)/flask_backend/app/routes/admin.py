@@ -49,6 +49,7 @@ class Dashboard(Resource):
             500: 'Internal server error'
         }
     )
+    @jwt_required()
     def get(self):
         """Get dashboard statistics (admin only)"""
         try:
@@ -81,6 +82,8 @@ class Dashboard(Resource):
                 'total_documents': total_documents
             }
             
+        except APIError as e:
+            admin_ns.abort(e.status_code, e.message)
         except Exception as e:
             admin_ns.abort(500, str(e))
 

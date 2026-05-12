@@ -9,6 +9,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+def _engine_dialect():
+    return db.engine.dialect.name
+
+
+def _is_mysql_family():
+    return _engine_dialect() in ("mysql", "mariadb")
+
+
 def ensure_member_columns():
     """
     Ensure all required columns exist in the members table.
@@ -71,12 +80,24 @@ def ensure_member_columns():
                 
                 if needs_resize:
                     try:
+                        dialect = _engine_dialect()
                         with db.engine.connect() as conn:
-                            # Use ALTER COLUMN to change the size
-                            conn.execute(text(f"""
-                                ALTER TABLE members 
-                                ALTER COLUMN {column_name} TYPE {column_def['type']}
-                            """))
+                            if dialect == "postgresql":
+                                conn.execute(text(f"""
+                                    ALTER TABLE members 
+                                    ALTER COLUMN {column_name} TYPE {column_def['type']}
+                                """))
+                            elif _is_mysql_family():
+                                null_sql = "NULL" if column_def.get("nullable", True) else "NOT NULL"
+                                conn.execute(text(f"""
+                                    ALTER TABLE members 
+                                    MODIFY COLUMN {column_name} {column_def['type']} {null_sql}
+                                """))
+                            else:
+                                logger.warning(
+                                    "Skipping member_id resize: unsupported dialect %s", dialect
+                                )
+                                raise RuntimeError(f"unsupported dialect: {dialect}")
                             conn.commit()
                         altered_columns.append(column_name)
                         logger.info(f"Altered column '{column_name}' from {existing_type} to VARCHAR(14)")
@@ -109,9 +130,17 @@ def ensure_cadre_level_columns():
             if 'cadre_level' not in columns:
                 try:
                     with db.engine.connect() as conn:
-                        conn.execute(text(
-                            "ALTER TABLE members ADD COLUMN cadre_level INTEGER REFERENCES cadre_levels(level)"
-                        ))
+                        # PostgreSQL allows inline REFERENCES; MySQL/MariaDB need plain INT + optional FK later.
+                        if _engine_dialect() == "postgresql":
+                            sql = (
+                                "ALTER TABLE members ADD COLUMN cadre_level INTEGER "
+                                "REFERENCES cadre_levels(level)"
+                            )
+                        elif _is_mysql_family():
+                            sql = "ALTER TABLE members ADD COLUMN cadre_level INT NULL"
+                        else:
+                            sql = "ALTER TABLE members ADD COLUMN cadre_level INTEGER NULL"
+                        conn.execute(text(sql))
                         conn.commit()
                     logger.info("Added 'cadre_level' column to members table")
                 except Exception as e:
