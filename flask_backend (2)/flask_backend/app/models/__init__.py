@@ -85,6 +85,9 @@ from app.models.news import NewsItem
 from app.models.event import Event
 from app.models.media import MediaItem
 from app.models.document import Document
+# District & Mandal must be registered before Member so db.create_all() creates FK targets on MySQL.
+from app.models.district import District
+from app.models.mandal import Mandal
 from app.models.member import Member
 from app.models.role import Role
 from app.models.parliamentary_constituency import ParliamentaryConstituency

@@ -8,7 +8,10 @@ from werkzeug.exceptions import BadRequest, RequestEntityTooLarge
 from datetime import timedelta
 import os
 import re
+import logging
 from dotenv import load_dotenv
+
+_logger = logging.getLogger(__name__)
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -265,7 +268,25 @@ def create_app():
     # Auto-create database tables on app initialization
     with app.app_context():
         # Import all models to ensure they're registered with SQLAlchemy
-        from app.models import User, NewsItem, Event, MediaItem, Document, MediaStats, Member, Role, ParliamentaryConstituency, AssemblyConstituency, Activity, CadreLevel, Voter, SchemeBeneficiary, Scheme
+        from app.models import (
+            User,
+            NewsItem,
+            Event,
+            MediaItem,
+            Document,
+            MediaStats,
+            District,
+            Mandal,
+            Member,
+            Role,
+            ParliamentaryConstituency,
+            AssemblyConstituency,
+            Activity,
+            CadreLevel,
+            Voter,
+            SchemeBeneficiary,
+            Scheme,
+        )
         try:
             # Only create tables if database is accessible (skip if RDS is not reachable)
             db.create_all()
@@ -300,5 +321,10 @@ def create_app():
             # Don't fail app startup if database is temporarily unavailable
             print(f"[⚠] Warning: Could not verify database tables: {e}")
             print("[⚠] App will continue, but database operations may fail until connection is restored")
+            print("[⚠] On MySQL/RDS run once: python init_mysql_schema.py")
+            _logger.exception(
+                "Database bootstrap failed (tables may be missing). "
+                "Fix connection/schema then restart, or run init_mysql_schema.py on the server."
+            )
     
     return app
