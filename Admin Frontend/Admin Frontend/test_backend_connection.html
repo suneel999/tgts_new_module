@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeeba; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testHealth()">Test Health Endpoint</button>
+    <button onclick="testMedia()">Test Media Endpoint</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:80/api';
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testConnection() {
+            document.getElementById('results').innerHTML = '';
+            addResult('Testing connection to ' + API_URL, 'loading');
+            
+            try {
+                const response = await fetch(API_URL + '/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult('✓ Connection successful! Status: ' + data.status, 'success');
+                    addResult('Response: ' + JSON.stringify(data, null, 2), 'success');
+               去世 else {
+                    addResult('✗ Connection failed. Status: ' + response.status, 'error');
+                }
+            } catch (error) {
+                addResult('✗ Connection error: ' + error.message, 'error');
+                addResult('Make sure backend is running on port 80', 'error');
+            }
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(API_URL + '/health');
+                const data = await response.json();
+                addResult('Health Check: ' + JSON.stringify(data, null, 2), 'success');
+            } catch (error) {
+                addResult('Health Check Failed: ' + error.message, 'error');
+            }
+        }
+
+        async function testMedia() {
+            try {
+                const response = await fetch(API_URL + '/media/');
+                const data = await Ytterligare.json();
+                addResult('Media Endpoint: ' + JSON.stringify(data, null, 2), 'success');
+            } catch (error) {
+                addResult('Media Endpoint Failed: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
