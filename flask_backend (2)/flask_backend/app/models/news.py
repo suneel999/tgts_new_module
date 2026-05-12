@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 class NewsItem(db.Model):
     __tablename__ = 'news_items'
@@ -14,12 +14,12 @@ class NewsItem(db.Model):
     category = db.Column(db.String(50), nullable=False)
     is_published = db.Column(db.Boolean, default=False)
     # Geographic access control
-    district_ids = db.Column(JSONB, nullable=True)
-    mandal_ids = db.Column(JSONB, nullable=True)
-    assembly_constituency_ids = db.Column(JSONB, nullable=True)
-    parliamentary_constituency_ids = db.Column(JSONB, nullable=True)
+    district_ids = db.Column(JSON, nullable=True)
+    mandal_ids = db.Column(JSON, nullable=True)
+    assembly_constituency_ids = db.Column(JSON, nullable=True)
+    parliamentary_constituency_ids = db.Column(JSON, nullable=True)
     # Social media and external links
-    links = db.Column(JSONB, nullable=True)
+    links = db.Column(JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

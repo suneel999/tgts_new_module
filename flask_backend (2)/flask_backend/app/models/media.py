@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 import json
 
 class MediaItem(db.Model):
@@ -16,10 +16,10 @@ class MediaItem(db.Model):
     access_level = db.Column(db.String(20), nullable=False, default='public')  # Single role: 'public', 'cadre', or 'admin'
     creator_cadre_level = db.Column(db.Integer, nullable=True)  # Cadre level of creator (1-10), for hierarchy-based visibility
     # Geographic access control
-    district_ids = db.Column(JSONB, nullable=True)
-    mandal_ids = db.Column(JSONB, nullable=True)
-    assembly_constituency_ids = db.Column(JSONB, nullable=True)
-    parliamentary_constituency_ids = db.Column(JSONB, nullable=True)
+    district_ids = db.Column(JSON, nullable=True)
+    mandal_ids = db.Column(JSON, nullable=True)
+    assembly_constituency_ids = db.Column(JSON, nullable=True)
+    parliamentary_constituency_ids = db.Column(JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

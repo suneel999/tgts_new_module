@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 class Document(db.Model):
     __tablename__ = 'documents'
@@ -13,10 +13,10 @@ class Document(db.Model):
     access_level = db.Column(db.String(20), nullable=False)  # JSON string of roles
     is_published = db.Column(db.Boolean, default=False)
     # Geographic access control
-    district_ids = db.Column(JSONB, nullable=True)
-    mandal_ids = db.Column(JSONB, nullable=True)
-    assembly_constituency_ids = db.Column(JSONB, nullable=True)
-    parliamentary_constituency_ids = db.Column(JSONB, nullable=True)
+    district_ids = db.Column(JSON, nullable=True)
+    mandal_ids = db.Column(JSON, nullable=True)
+    assembly_constituency_ids = db.Column(JSON, nullable=True)
+    parliamentary_constituency_ids = db.Column(JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

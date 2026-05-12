@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -20,10 +20,10 @@ class Event(db.Model):
     access_level = db.Column(db.String(20), nullable=False, default='public')  # 'public', 'cadre', or 'admin'
     creator_cadre_level = db.Column(db.Integer, nullable=True)  # Cadre level of creator (1-10), for hierarchy-based visibility
     # Geographic access control
-    district_ids = db.Column(JSONB, nullable=True)
-    mandal_ids = db.Column(JSONB, nullable=True)
-    assembly_constituency_ids = db.Column(JSONB, nullable=True)
-    parliamentary_constituency_ids = db.Column(JSONB, nullable=True)
+    district_ids = db.Column(JSON, nullable=True)
+    mandal_ids = db.Column(JSON, nullable=True)
+    assembly_constituency_ids = db.Column(JSON, nullable=True)
+    parliamentary_constituency_ids = db.Column(JSON, nullable=True)
     submitted_by_user_id = db.Column(db.String(50), nullable=True)  # Set for user-submitted events pending review
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

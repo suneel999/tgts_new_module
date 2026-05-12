@@ -1,7 +1,6 @@
 from app import db
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB, ARRAY
-from sqlalchemy import String
+from sqlalchemy import JSON
 
 class Activity(db.Model):
     __tablename__ = 'activities'
@@ -13,8 +12,8 @@ class Activity(db.Model):
     description_en = db.Column(db.Text, nullable=False)
     description_te = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(200))
-    image_urls = db.Column(ARRAY(String), nullable=True)  # Array of image URLs
-    video_urls = db.Column(ARRAY(String), nullable=True)  # Array of video URLs
+    image_urls = db.Column(JSON, nullable=True)  # JSON array of image URLs
+    video_urls = db.Column(JSON, nullable=True)  # JSON array of video URLs
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
