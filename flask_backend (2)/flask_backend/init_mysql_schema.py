@@ -67,7 +67,7 @@ def main() -> int:
             "members",
             "roles",
         )
-        missing = sorted(required - names)
+        missing = sorted(set(required) - names)
         if missing:
             print("ERROR: Tables still missing:", ", ".join(missing))
             return 1
