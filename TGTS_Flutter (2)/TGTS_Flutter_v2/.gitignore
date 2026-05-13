@@ -1,0 +1,20 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+**/Flutter/ephemeral/
+
+# IDE
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Misc
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store

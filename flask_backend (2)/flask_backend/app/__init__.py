@@ -68,6 +68,8 @@ def create_app():
     app.config['AWS_REGION'] = os.getenv('AWS_REGION', 'us-east-1')
     app.config['S3_BUCKET_NAME'] = os.getenv('S3_BUCKET_NAME', 'tgts-media')
     app.config['S3_USE_LOCAL_STORAGE'] = os.getenv('S3_USE_LOCAL_STORAGE', 'true').lower() == 'true'
+    # Public origin for /uploads/... (no /api prefix). Used so mobile/web get absolute image URLs.
+    app.config['PUBLIC_BASE_URL'] = os.getenv('PUBLIC_BASE_URL', '').strip().rstrip('/')
     
     # Initialize extensions with app
     db.init_app(app)

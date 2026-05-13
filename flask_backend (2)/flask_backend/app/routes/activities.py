@@ -458,6 +458,7 @@ from app import db
 from app.utils.auth_utils import get_current_user
 from app.utils.error_handling import validate_required_fields, log_api_call, APIError
 from app.utils.timezone_utils import get_ist_now
+from app.utils.media_urls import absolute_media_url
 from app.services.s3_service import get_s3_service
 from werkzeug.utils import secure_filename
 import uuid
@@ -526,6 +527,8 @@ def safe_activity_dict(activity, current_user=None):
         else:
             image_urls = []
 
+        image_urls = [absolute_media_url(u) or u for u in image_urls]
+
         # ── Safe video_urls conversion ──
         raw_video_urls = activity.video_urls
         if raw_video_urls is None:
@@ -536,6 +539,8 @@ def safe_activity_dict(activity, current_user=None):
             video_urls = [u for u in raw_video_urls.split(',') if u.strip()]
         else:
             video_urls = []
+
+        video_urls = [absolute_media_url(u) or u for u in video_urls]
 
         # ── Safe user info ──
         user_name        = None
