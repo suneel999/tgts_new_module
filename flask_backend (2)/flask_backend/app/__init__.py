@@ -9,9 +9,23 @@ from datetime import timedelta
 import os
 import re
 import logging
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 _logger = logging.getLogger(__name__)
+
+
+def _web_origin(url):
+    """Return scheme://host[:port] for CORS, or None if URL is invalid."""
+    if not url or not isinstance(url, str):
+        return None
+    url = url.strip()
+    if not url.startswith(('http://', 'https://')):
+        return None
+    parsed = urlparse(url)
+    if not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}"
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -94,8 +108,8 @@ def create_app():
         }), 401
     
     # Configure CORS to allow frontend access
-    # Get CORS origins from environment variable or use defaults
     cors_origins_env = os.getenv('CORS_ORIGINS', '')
+    admin_frontend_url = os.getenv('ADMIN_FRONTEND_URL', '')
     
     # Default origins for local development
     default_origins = [
@@ -106,42 +120,52 @@ def create_app():
     ]
     
     # Always allow AWS Amplify domains (production deployment)
-    # Explicitly include common Amplify patterns
     amplify_origins = [
-        "https://main.d2i1qc8827fi7m.amplifyapp.com",  # Current production domain
-        re.compile(r'https://.*\.amplifyapp\.com'),  # All Amplify domains
+        "https://main.d2i1qc8827fi7m.amplifyapp.com",
+        re.compile(r'https://.*\.amplifyapp\.com'),
     ]
     
-    # Build allowed origins list
+    # Explicit origins from env + admin URL (so CORS works if only ADMIN_FRONTEND_URL is set)
+    env_origin_strings = []
     if cors_origins_env:
-        # Split by comma and add to origins list
-        env_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
-        # Combine with defaults and Amplify origins, removing duplicates
-        allowed_origins = list(dict.fromkeys(default_origins + env_origins)) + amplify_origins
-    else:
-        # If no env var set, use defaults + allow all Amplify domains for production
-        allowed_origins = default_origins + amplify_origins
+        env_origin_strings.extend(
+            o.strip() for o in cors_origins_env.split(',') if o.strip()
+        )
+    admin_origin = _web_origin(admin_frontend_url)
+    if admin_origin and admin_origin not in env_origin_strings:
+        env_origin_strings.append(admin_origin)
+    
+    merged = list(dict.fromkeys(default_origins + env_origin_strings))
+    allowed_origins = merged + amplify_origins
+    
+    _cors_headers = [
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Accept",
+        "Origin",
+    ]
     
     # Configure CORS with allowed origins
-    # Use a more permissive configuration to ensure OPTIONS requests work
     cors.init_app(app, resources={
         r"/api/*": {
             "origins": allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+            "allow_headers": _cors_headers,
             "expose_headers": ["Content-Type", "Authorization"],
             "supports_credentials": True,
-            "max_age": 3600  # Cache preflight requests for 1 hour
+            "max_age": 3600
         },
         r"/uploads/*": {
             "origins": allowed_origins,
             "methods": ["GET", "OPTIONS"],
+            "allow_headers": _cors_headers,
             "supports_credentials": True
         },
-        r"/*": {  # Fallback for any other routes
+        r"/*": {
             "origins": allowed_origins,
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            "allow_headers": _cors_headers,
             "supports_credentials": True
         }
     })
