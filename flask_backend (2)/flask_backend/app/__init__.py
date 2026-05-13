@@ -135,7 +135,13 @@ def create_app():
     if admin_origin and admin_origin not in env_origin_strings:
         env_origin_strings.append(admin_origin)
     
-    merged = list(dict.fromkeys(default_origins + env_origin_strings))
+    # Production admin hostnames (always allowed — avoids total CORS failure if EC2/systemd
+    # does not load .env and CORS_ORIGINS / ADMIN_FRONTEND_URL are empty).
+    deployment_admin_origins = [
+        "https://admin.tgtccon2025.com",
+    ]
+
+    merged = list(dict.fromkeys(default_origins + env_origin_strings + deployment_admin_origins))
     allowed_origins = merged + amplify_origins
     
     _cors_headers = [
@@ -146,29 +152,17 @@ def create_app():
         "Origin",
     ]
     
-    # Configure CORS with allowed origins
-    cors.init_app(app, resources={
-        r"/api/*": {
-            "origins": allowed_origins,
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            "allow_headers": _cors_headers,
-            "expose_headers": ["Content-Type", "Authorization"],
-            "supports_credentials": True,
-            "max_age": 3600
-        },
-        r"/uploads/*": {
-            "origins": allowed_origins,
-            "methods": ["GET", "OPTIONS"],
-            "allow_headers": _cors_headers,
-            "supports_credentials": True
-        },
-        r"/*": {
-            "origins": allowed_origins,
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-            "allow_headers": _cors_headers,
-            "supports_credentials": True
-        }
-    })
+    # Apply CORS to all routes (path-specific r"/api/*" patterns are unreliable as regex and
+    # can skip nested paths like /api/admin/dashboard on OPTIONS preflight).
+    cors.init_app(
+        app,
+        origins=allowed_origins,
+        methods=["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=_cors_headers,
+        expose_headers=["Content-Type", "Authorization"],
+        supports_credentials=True,
+        max_age=3600,
+    )
     
     # Create Flask-RESTX API instance
     api = Api(
