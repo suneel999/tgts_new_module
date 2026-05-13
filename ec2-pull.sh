@@ -19,7 +19,7 @@ fi
 
 echo ""
 echo "Repo ready at: $DEST"
-echo "Backend path (spaces in folder names — use quotes):"
-echo "  cd \"$DEST/flask_backend (2)/flask_backend\""
+echo "Backend path (no spaces — recommended after rename-workspace-folders.ps1):"
+echo "  cd \"$DEST/tgts-flask/flask_backend\""
 echo "Then: python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
 echo "Copy .env.example to .env and edit secrets on the server only."

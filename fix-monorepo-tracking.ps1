@@ -16,9 +16,15 @@ $nested = Get-ChildItem -LiteralPath . -Force -Recurse -Filter ".git" -ErrorActi
 if (-not $nested) {
     Write-Host "No nested .git entries found under project folders."
     Write-Host "Checking tracked file counts (expect hundreds for Flutter):"
-    git ls-files -- "TGTS_Flutter (2)" | Measure-Object -Line | ForEach-Object { "TGTS_Flutter (2) tracked lines: $($_.Lines)" }
-    git ls-files -- "Admin Frontend" | Measure-Object -Line | ForEach-Object { "Admin Frontend tracked lines: $($_.Lines)" }
-    git ls-files -- "flask_backend (2)" | Measure-Object -Line | ForEach-Object { "flask_backend (2) tracked lines: $($_.Lines)" }
+    foreach ($pair in @(
+            @("tgts-flutter", "TGTS_Flutter (2)"),
+            @("admin-frontend", "Admin Frontend"),
+            @("tgts-flask", "flask_backend (2)")
+        )) {
+        $new, $old = $pair[0], $pair[1]
+        $path = if (Test-Path -LiteralPath $new) { $new } elseif (Test-Path -LiteralPath $old) { $old } else { $new }
+        git ls-files -- "$path" | Measure-Object -Line | ForEach-Object { "$path tracked lines: $($_.Lines)" }
+    }
     exit 0
 }
 
@@ -33,9 +39,13 @@ foreach ($item in $nested) {
 }
 
 Write-Host "`nClearing cache for subfolders and re-adding..."
-git rm -r --cached "TGTS_Flutter (2)" 2>$null
-git rm -r --cached "Admin Frontend" 2>$null
-git rm -r --cached "flask_backend (2)" 2>$null
+foreach ($p in @(
+        "TGTS_Flutter (2)", "tgts-flutter",
+        "Admin Frontend", "admin-frontend",
+        "flask_backend (2)", "tgts-flask"
+    )) {
+    git rm -r --cached $p 2>$null
+}
 
 git add -A
 git status

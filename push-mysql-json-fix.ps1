@@ -1,13 +1,23 @@
 # Push MySQL JSON model fixes — run: cd "d:\tgts_apk" ; .\push-mysql-json-fix.ps1
+# Uses tgts-flask path after .\rename-workspace-folders.ps1, else legacy flask_backend (2).
 
 Set-Location $PSScriptRoot
 
+$fbRoot = if (Test-Path -LiteralPath "tgts-flask\flask_backend") {
+    "tgts-flask/flask_backend"
+} elseif (Test-Path -LiteralPath "flask_backend (2)\flask_backend") {
+    "flask_backend (2)/flask_backend"
+} else {
+    Write-Error "Flask backend folder not found (expected tgts-flask/flask_backend or flask_backend (2)/flask_backend)."
+    exit 1
+}
+
 git add -- `
-  "flask_backend (2)/flask_backend/app/models/document.py" `
-  "flask_backend (2)/flask_backend/app/models/media.py" `
-  "flask_backend (2)/flask_backend/app/models/news.py" `
-  "flask_backend (2)/flask_backend/app/models/event.py" `
-  "flask_backend (2)/flask_backend/app/models/activity.py"
+  "$fbRoot/app/models/document.py" `
+  "$fbRoot/app/models/media.py" `
+  "$fbRoot/app/models/news.py" `
+  "$fbRoot/app/models/event.py" `
+  "$fbRoot/app/models/activity.py"
 
 git status
 git commit -m "fix(db): SQLAlchemy JSON for MySQL RDS (replace PostgreSQL JSONB/ARRAY)"

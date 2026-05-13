@@ -23,31 +23,11 @@ except ImportError:
 
 from app import create_app, db
 from app.models.parliamentary_constituency import ParliamentaryConstituency
+from app.seed_constituencies import MANUAL_CONSTITUENCIES
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-
-# Manual data provided by user
-MANUAL_CONSTITUENCIES = [
-    {"number": 1, "name": "Adilabad (ST)"},
-    {"number": 2, "name": "Peddapalle (SC)"},
-    {"number": 3, "name": "Karimnagar"},
-    {"number": 4, "name": "Nizamabad"},
-    {"number": 5, "name": "Zaheerabad"},
-    {"number": 6, "name": "Medak"},
-    {"number": 7, "name": "Malkajgiri"},
-    {"number": 8, "name": "Secunderabad"},
-    {"number": 9, "name": "Hyderabad"},
-    {"number": 10, "name": "Chevella"},
-    {"number": 11, "name": "Mahbubnagar"},
-    {"number": 12, "name": "Nagarkurnool (SC)"},
-    {"number": 13, "name": "Nalgonda"},
-    {"number": 14, "name": "Bhuvangiri"},
-    {"number": 15, "name": "Warangal (SC)"},
-    {"number": 16, "name": "Mahaboobabad (ST)"},
-    {"number": 17, "name": "Khammam"},
-]
 
 def extract_text_with_pdfplumber(pdf_path):
     """Extract text from PDF using pdfplumber."""

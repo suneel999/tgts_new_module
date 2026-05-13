@@ -57,7 +57,7 @@ def main() -> int:
 
         insp = inspect(db.engine)
         names = set(insp.get_table_names())
-        required = (
+        required = {
             "users",
             "cadre_levels",
             "districts",
@@ -66,8 +66,8 @@ def main() -> int:
             "assembly_constituencies",
             "members",
             "roles",
-        )
-        missing = sorted(set(required) - names)
+        }
+        missing = sorted(required - names)
         if missing:
             print("ERROR: Tables still missing:", ", ".join(missing))
             return 1
