@@ -372,6 +372,8 @@ class VoterDetailResource(Resource):
                 'caste': 'caste',
                 'phone': 'phone',
                 'isBeneficiary': 'is_beneficiary',
+                'beneficiaryScheme': 'beneficiary_scheme',
+                'voterParty': 'voter_party',
                 'hasVoted': 'has_voted',
                 'isEffective': 'is_effective',
                 'isDuplicate': 'is_duplicate',

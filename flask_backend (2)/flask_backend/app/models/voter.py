@@ -24,6 +24,8 @@ class Voter(db.Model):
     caste = db.Column(db.String(100), index=True)
     color = db.Column(db.String(20), default='white')
     is_beneficiary = db.Column(db.Boolean, default=False)
+    beneficiary_scheme = db.Column(db.String(500), nullable=True)
+    voter_party = db.Column(db.String(10), nullable=True)
     is_duplicate = db.Column(db.Boolean, default=False)
     has_voted = db.Column(db.Boolean, default=False)
     is_effective = db.Column(db.Boolean, default=True)
@@ -51,6 +53,8 @@ class Voter(db.Model):
             'caste': self.caste or '',
             'color': self.color or 'white',
             'isBeneficiary': bool(self.is_beneficiary),
+            'beneficiaryScheme': self.beneficiary_scheme or '',
+            'voterParty': self.voter_party or '',
             'isDuplicate': bool(self.is_duplicate),
             'hasVoted': bool(self.has_voted),
             'isEffective': bool(self.is_effective),

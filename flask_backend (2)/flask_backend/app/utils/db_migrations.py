@@ -178,6 +178,106 @@ def ensure_cadre_level_columns():
         logger.error(f"Error in ensure_cadre_level_columns: {str(e)}")
 
 
+def ensure_voter_columns():
+    """
+    Ensure beneficiary_scheme and voter_party exist on voters (MySQL/MariaDB + PostgreSQL).
+    Also widen legacy beneficiary_scheme VARCHAR(50) -> VARCHAR(500) when needed.
+    """
+    try:
+        inspector = db.inspect(db.engine)
+        if 'voters' not in inspector.get_table_names():
+            return
+
+        dialect = _engine_dialect()
+        columns_map = {col['name']: col for col in inspector.get_columns('voters')}
+
+        additions = [
+            ('beneficiary_scheme', 'VARCHAR(500)'),
+            ('voter_party', 'VARCHAR(10)'),
+        ]
+        for col_name, col_type in additions:
+            if col_name not in columns_map:
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(
+                            text(f"ALTER TABLE voters ADD COLUMN {col_name} {col_type} NULL")
+                        )
+                        conn.commit()
+                    logger.info("Added '%s' column to voters table", col_name)
+                except Exception as e:
+                    logger.error("Failed to add '%s' to voters: %s", col_name, e)
+
+        # Refresh column info for widen check (avoid stale inspector cache)
+        columns_map = {
+            col['name']: col
+            for col in db.inspect(db.engine).get_columns('voters')
+        }
+        if 'beneficiary_scheme' in columns_map:
+            existing_type = str(columns_map['beneficiary_scheme']['type']).upper()
+            if '(50)' in existing_type and '500' not in existing_type:
+                try:
+                    with db.engine.connect() as conn:
+                        if dialect == 'postgresql':
+                            conn.execute(
+                                text(
+                                    "ALTER TABLE voters ALTER COLUMN beneficiary_scheme TYPE VARCHAR(500)"
+                                )
+                            )
+                        elif _is_mysql_family():
+                            conn.execute(
+                                text(
+                                    "ALTER TABLE voters MODIFY COLUMN beneficiary_scheme VARCHAR(500) NULL"
+                                )
+                            )
+                        else:
+                            raise RuntimeError(f"unsupported dialect for widen: {dialect}")
+                        conn.commit()
+                    logger.info("Widened voters.beneficiary_scheme to VARCHAR(500)")
+                except Exception as e:
+                    logger.error("Failed to widen beneficiary_scheme on voters: %s", e)
+
+    except Exception as e:
+        logger.error(f"Error in ensure_voter_columns: {str(e)}")
+
+
+def ensure_activities_columns():
+    """
+    Ensure activities.image_urls / video_urls exist.
+
+    v2 used PostgreSQL TEXT[] migrations; production uses SQLAlchemy JSON (MySQL JSON /
+    PostgreSQL JSONB) to match `Activity` model and RDS MySQL. This only ADDs missing columns.
+    """
+    try:
+        inspector = db.inspect(db.engine)
+        if 'activities' not in inspector.get_table_names():
+            return
+
+        dialect = _engine_dialect()
+        columns = {c['name'] for c in inspector.get_columns('activities')}
+
+        if dialect == 'postgresql':
+            col_ddl = 'JSONB NULL'
+        elif _is_mysql_family():
+            col_ddl = 'JSON NULL'
+        else:
+            col_ddl = 'TEXT NULL'
+
+        for col_name in ('image_urls', 'video_urls'):
+            if col_name in columns:
+                continue
+            try:
+                with db.engine.connect() as conn:
+                    conn.execute(
+                        text(f'ALTER TABLE activities ADD COLUMN {col_name} {col_ddl}')
+                    )
+                    conn.commit()
+                logger.info("Added '%s' to activities table", col_name)
+            except Exception as e:
+                logger.error("Failed to add '%s' to activities: %s", col_name, e)
+    except Exception as e:
+        logger.error("Error in ensure_activities_columns: %s", e)
+
+
 def ensure_all_columns():
     """
     Ensure all required columns exist in all tables.
@@ -185,4 +285,6 @@ def ensure_all_columns():
     """
     ensure_member_columns()
     ensure_cadre_level_columns()
+    ensure_voter_columns()
+    ensure_activities_columns()
 
