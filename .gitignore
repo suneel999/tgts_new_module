@@ -25,6 +25,9 @@ node_modules/
 .dart_tool/
 **/Flutter/ephemeral/
 
+# Legacy duplicate Flask tree — use flask_backend (2)/flask_backend only in Git
+**/flask_backend_v2/
+
 # IDE / OS
 .idea/
 .vscode/

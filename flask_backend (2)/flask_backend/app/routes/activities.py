@@ -523,7 +523,11 @@ def safe_activity_dict(activity, current_user=None):
         elif isinstance(raw_image_urls, list):
             image_urls = raw_image_urls
         elif isinstance(raw_image_urls, str):
-            image_urls = [u for u in raw_image_urls.split(',') if u.strip()]
+            try:
+                parsed = json.loads(raw_image_urls)
+                image_urls = parsed if isinstance(parsed, list) else [raw_image_urls]
+            except (json.JSONDecodeError, ValueError):
+                image_urls = [u for u in raw_image_urls.split(',') if u.strip()]
         else:
             image_urls = []
 
@@ -536,7 +540,11 @@ def safe_activity_dict(activity, current_user=None):
         elif isinstance(raw_video_urls, list):
             video_urls = raw_video_urls
         elif isinstance(raw_video_urls, str):
-            video_urls = [u for u in raw_video_urls.split(',') if u.strip()]
+            try:
+                parsed = json.loads(raw_video_urls)
+                video_urls = parsed if isinstance(parsed, list) else [raw_video_urls]
+            except (json.JSONDecodeError, ValueError):
+                video_urls = [u for u in raw_video_urls.split(',') if u.strip()]
         else:
             video_urls = []
 
