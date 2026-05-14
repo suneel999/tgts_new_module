@@ -13,6 +13,41 @@ All scripts are **fully compatible with Linux**. They use:
 
 ### 1. Schema Migrations (Structure Changes)
 
+#### Alembic / Flask-Migrate (`migrations/`)
+
+**Purpose:** Versioned schema changes tracked in Git (`migrations/versions/`).
+
+**Current revision:** `afc2245642f7` — adds nullable columns on `voters` when missing:
+
+- `beneficiary_scheme` VARCHAR(500)
+- `voter_party` VARCHAR(10)
+
+The upgrade is **idempotent** (skips columns that already exist), which matches RDS and fresh installs.
+
+**When to run:**
+
+- After `git pull` on EC2 when a new file appears under `migrations/versions/`
+- On RDS that never had these columns (same fix as `add_voter_beneficiary_party_columns.py`)
+
+**Commands (Linux / EC2):**
+
+```bash
+cd /path/to/flask_backend
+source venv/bin/activate
+export FLASK_APP=app.py
+flask db upgrade
+sudo systemctl restart tgts-api.service   # adjust unit name if different
+```
+
+**Notes:**
+
+- First `flask db upgrade` on a database creates `alembic_version` and applies pending revisions only.
+- App startup still runs `ensure_all_columns()` (including `ensure_voter_columns()`); Alembic is the explicit, deploy-time path.
+
+**Alternative:** `python add_voter_beneficiary_party_columns.py` (same DDL via Python).
+
+---
+
 #### A. Constituency ID Migration (UUID → Integer)
 **File:** `migrate_constituencies_to_integer_ids.py`
 
@@ -195,13 +230,12 @@ pip install -r requirements.txt
 cp env_production.txt .env
 nano .env  # Edit with production values
 
-# 4. Initialize database
+# 4. Initialize database (tables + columns)
 export FLASK_APP=app.py
-flask db init
-flask db migrate -m "Initial migration"
+python3 init_mysql_schema.py
 flask db upgrade
 
-# 5. Run schema migrations (if needed)
+# 5. Run legacy one-off schema migrations (if needed)
 python3 migrate_constituencies_to_integer_ids.py  # If DB has old UUID columns
 python3 add_constituency_columns.py  # If members table missing columns
 python3 create_rsvp_table.py  # If RSVP table missing
@@ -224,7 +258,7 @@ git pull origin main
 # 2. Update dependencies
 pip install -r requirements.txt --upgrade
 
-# 3. Run Flask migrations (if any)
+# 3. Run Alembic migrations (after git pull if `migrations/versions/` changed)
 export FLASK_APP=app.py
 flask db upgrade
 
@@ -283,6 +317,8 @@ with app.app_context():
 ## 📝 Summary
 
 **Required for first-time deployment:**
+- ✅ `init_mysql_schema.py` and/or `db.create_all()` on the server
+- ✅ `flask db upgrade` (Alembic; voters columns and future revisions)
 - ✅ `populate_parliamentary_constituencies.py`
 - ✅ `populate_assembly_constituencies.py`
 - ✅ `initialize_media_stats.py`

@@ -7,6 +7,8 @@ Use when production logs show: (1146, "Table '....' doesn't exist")
 On EC2 (activate venv first):
   cd /path/to/flask_backend
   python init_mysql_schema.py
+For Alembic-tracked DDL (e.g. voters columns), also:
+  export FLASK_APP=app.py && flask db upgrade
 Then:
   sudo systemctl restart tgts-api
 """

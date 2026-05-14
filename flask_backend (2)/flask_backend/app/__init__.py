@@ -310,7 +310,7 @@ def create_app():
         try:
             # Only create tables if database is accessible (skip if RDS is not reachable)
             db.create_all()
-            print("[✓] Database tables created/verified successfully")
+            print("[OK] Database tables created/verified successfully")
 
             # Auto-populate Roles
             if Role.query.first() is None:
@@ -322,7 +322,7 @@ def create_app():
                 for role in roles:
                     db.session.add(role)
                 db.session.commit()
-                print("[✓] Roles initialized successfully")
+                print("[OK] Roles initialized successfully")
             
             # Auto-populate Cadre Levels
             if CadreLevel.query.first() is None:
@@ -331,17 +331,17 @@ def create_app():
                     cadre_level = CadreLevel(**level_data)
                     db.session.add(cadre_level)
                 db.session.commit()
-                print("[✓] Cadre levels initialized successfully")
+                print("[OK] Cadre levels initialized successfully")
             
             # Check and add missing columns automatically
             from app.utils.db_migrations import ensure_all_columns
             ensure_all_columns()
-            print("[✓] Database columns verified/updated successfully")
+            print("[OK] Database columns verified/updated successfully")
         except Exception as e:
             # Don't fail app startup if database is temporarily unavailable
-            print(f"[⚠] Warning: Could not verify database tables: {e}")
-            print("[⚠] App will continue, but database operations may fail until connection is restored")
-            print("[⚠] On MySQL/RDS run once: python init_mysql_schema.py")
+            print(f"[WARN] Could not verify database tables: {e}")
+            print("[WARN] App will continue, but database operations may fail until connection is restored")
+            print("[WARN] On MySQL/RDS run once: python init_mysql_schema.py")
             _logger.exception(
                 "Database bootstrap failed (tables may be missing). "
                 "Fix connection/schema then restart, or run init_mysql_schema.py on the server."

@@ -1,8 +1,13 @@
 """
 One-shot migration: add beneficiary_scheme + voter_party on voters (RDS MySQL / Postgres).
-Startup also runs ensure_voter_columns() in app.utils.db_migrations.
 
-Run: python add_voter_beneficiary_party_columns.py
+Preferred on servers with this repo: Alembic revision `afc2245642f7` — run:
+  export FLASK_APP=app.py   # Linux
+  flask db upgrade
+
+Equivalent to this script; startup also runs ensure_voter_columns() in app.utils.db_migrations.
+
+Run (alternative): python add_voter_beneficiary_party_columns.py
 """
 import os
 import sys
